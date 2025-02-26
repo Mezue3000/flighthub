@@ -2,8 +2,9 @@
 from __future__ import annotations
 from sqlmodel import SQLModel, Relationship, Field, CheckConstraint, func
 from typing import Optional, List
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timezone
 from enum import Enum
+from decimal import Decimal
 
 
 # create passenger model
@@ -25,11 +26,12 @@ class FlightClass(str, Enum):
     economy = "economy"
     
     
+# create flight model    
 class Flight(SQLModel, table=True):
     flight_id: Optional[int] = Field(default=None, primary_key=True)
     flight_number: str = Field(..., max_length=25)
     flight_class: FlightClass = Field(...)
-    departure_time: datetime = Field(...,)
+    departure_time: datetime = Field(...)
     arrival_time: datetime = Field(...)
     distance_in_miles: int = Field(...)
     fligth_duration: time = Field(...)
@@ -44,4 +46,25 @@ class Ticket(SQLModel, table=True):
     ticket_id: Optional[int] = Field(default=None, primary_key=True)
     passenger_id: int = Field(foreign_key="passenger.passenger_id")
     flight_id: int = Field(foreign_key="flight.flight_id")
+    payment:Payment = Relationship(back_populates="ticket", sa_relationship_kwargs={"uselist": False})
+    
+    
+
+# validate payment method
+class PaymentMethod(str, Enum):
+    creditcard = "creditcard"
+    debitcard = "debitcard"
+    cash = "cash"
+
+
+# create payment table
+class Payment(SQLModel, table=True):
+    ticket_id: int = Field(primary_key=True, foreign_key="ticket.ticket_id")
+    amount: Decimal = Field(gt=0, sa_column_kwargs={"type": "Numeric(12, 2)"})
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)
+    payment_method: PaymentMethod = Field(..., max_length=12)
+    
+    __table_arg__ = (CheckConstraint("payment_method IN('creditcard', 'debitcard', 'cash')"))
+    
+    ticket:Ticket = Relationship(back_populates="payment") 
     
