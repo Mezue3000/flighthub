@@ -71,10 +71,30 @@ class Payment(SQLModel, table=True):
     
     ticket:Ticket = Relationship(back_populates="payment") 
     
-    
+
+# create airline model
 class Airline(SQLModel, table=True):
     airline_id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(..., max_length=25)
-    flights: List[Flight] = Relationship(back_populates="airline")
+    flights: List[Flight] = Relationship(back_populates="airline") 
+    aircrafts: List[Aircraft] = Relationship(back_populates="airline")
     
+    
+# create aircraft table
+class Aircraft(SQLModel, table=True):
+    aircraft_id: Optional[int] = Field(default=None, primary_key=True)
+    model: str = Field(..., max_length=25)
+    capacity: int = Field(..., gt=0)
+    airline_id: int = Field(foreign_key="airline.airline_id") 
+    
+    airline:Airline = Relationship(back_populates="aircraft")
+    
+    
+# create airport model
+class Airport(SQLModel, table=True):
+    airport_id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(..., max_length=25)
+    code: str = Field(...)
+    country: str = Field(..., max_length=25)
+    state: str = Field(..., max_length=25)
 
