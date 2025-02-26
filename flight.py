@@ -36,6 +36,9 @@ class Flight(SQLModel, table=True):
     distance_in_miles: int = Field(...)
     fligth_duration: time = Field(...)
     destination: str = Field(..., max_length=25)
+    airline_id: int = Field(foreign_key="airline.airline_id")
+    
+    airline:Airline = Relationship(back_populates="flight")
     __table_arg__ = (CheckConstraint("flight_class IN('first', 'bussiness', 'economy')"))
     
     passengers: List[Passenger] = Relationship(back_populates="flights", link_model="Ticket")
@@ -68,3 +71,10 @@ class Payment(SQLModel, table=True):
     
     ticket:Ticket = Relationship(back_populates="payment") 
     
+    
+class Airline(SQLModel, table=True):
+    airline_id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(..., max_length=25)
+    flights: List[Flight] = Relationship(back_populates="airline")
+    
+
