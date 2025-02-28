@@ -19,10 +19,10 @@ class Passenger(SQLModel, table=True):
     flights: List[Flight] = Relationship(back_populates="passengers", link_model="Ticket")
     
 
-# validate flight class
+# validate flight class(api validation)
 class FlightClass(str, Enum):
     first = "first"
-    bussiness = "bussiness"
+    bussiness = "bussiness" 
     economy = "economy"
     
     
@@ -39,6 +39,8 @@ class Flight(SQLModel, table=True):
     airline_id: int = Field(foreign_key="airline.airline_id")
     
     airline:Airline = Relationship(back_populates="flight")
+    airports: List[Airport] = Relationship(back_populates="flights", link_model="Flight_Airport")
+# database validation
     __table_arg__ = (CheckConstraint("flight_class IN('first', 'bussiness', 'economy')"))
     
     passengers: List[Passenger] = Relationship(back_populates="flights", link_model="Ticket")
@@ -53,7 +55,7 @@ class Ticket(SQLModel, table=True):
     
     
 
-# validate payment method
+# validate payment method(api validation)
 class PaymentMethod(str, Enum):
     creditcard = "creditcard"
     debitcard = "debitcard"
@@ -66,7 +68,8 @@ class Payment(SQLModel, table=True):
     amount: Decimal = Field(gt=0, sa_column_kwargs={"type": "Numeric(12, 2)"})
     date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)
     payment_method: PaymentMethod = Field(..., max_length=12)
-    
+
+# database validation
     __table_arg__ = (CheckConstraint("payment_method IN('creditcard', 'debitcard', 'cash')"))
     
     ticket:Ticket = Relationship(back_populates="payment") 
@@ -97,4 +100,20 @@ class Airport(SQLModel, table=True):
     code: str = Field(...)
     country: str = Field(..., max_length=25)
     state: str = Field(..., max_length=25)
+    
+    flights: List[Flight] = Relationship(back_populates="airports", link_model="AirportFlight")
 
+# validate flight type(api validation)
+class FlightType(str, Enum):
+    departure = "departure"
+    arrival = "arrival"
+
+
+# add link model
+class AirportFlight(SQLModel, table=True):
+    flight_id: int =  Field(primary_key=True, foreign_key="flight.flight_id")
+    airport_id: int = Field(primary_key=True, foreign_key="airport.airport_id")
+    flight_type: FlightType = Field(..., max_length=12)
+
+# database valdation    
+    __table_arg__ = CheckConstraint("flight_type IN('arrival', 'departure')", name="valid_flight_type")
