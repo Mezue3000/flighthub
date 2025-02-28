@@ -118,19 +118,22 @@ class AirportFlight(SQLModel, table=True):
 
 # database valdation    
     __table_arg__ = CheckConstraint("flight_type IN('arrival', 'departure')", name="valid_flight_type")
-    
-    
+
+
+# validate baggage type(api validation)
 class BaggageType(str, Enum):
     checked = "checked"
     hand = "hand"
     carried = "carried"
-    
+ 
+ 
+#  create baggage model   
 class Baggage(SQLModel, table=True):
     baggage_id: Optional[int] = Field(default=None, primary_key=True)
     baggage_type: BaggageType = Field(..., max_length=10)
     weight_in_kg: int = Field(..., gt=0)
     flight_id: int = Field(foreign_key="flight.flight_id")
     
-    __table_arg__ = (CheckConstraint("baggage_type IN('chhecked', 'hand', 'carried')", name="valid_baggage_type"))
-    
     flight: Flight = Relationship(back_populates="baggages")
+    
+    __table_arg__ = (CheckConstraint("baggage_type IN('chhecked', 'hand', 'carried')", name="valid_baggage_type"))
